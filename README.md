@@ -21,4 +21,4 @@ http://nginxIP/expiry
 
 5. Project Screenshots
    
-![demo]("https://github.com/h5m2424/Expiry_Management/blob/main/demo.png")
+![demo](https://github.com/h5m2424/Expiry_Management/blob/main/demo.png)
