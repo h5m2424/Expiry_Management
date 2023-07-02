@@ -1,0 +1,6 @@
+pymysql
+configparser
+flask
+flask_sqlalchemy
+mysqlclient
+cryptography

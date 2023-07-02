@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>证件管理系统</title>
+    <link rel="stylesheet" href="assets/bootstrap.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>证件管理系统</h1>
+        <hr>
+        <div class="row">
+            <div class="col-md-6">
+                <h2>证件有效期列表</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>证件名称</th>
+                            <th>有效期</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="document-list">
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h2>添加证件</h2>
+                <form id="add-document-form">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">证件名称</label>
+                        <input type="text" class="form-control" id="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="expiry" class="form-label">有效期</label>
+                        <input type="date" class="form-control" id="expiry" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">添加</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/jquery-3.6.0.min.js"></script>
+    <script>
+        // 页面加载完成后获取最新证件列表
+        $(document).ready(function() {
+            getDocuments();
+        });
+
+        // 获取最新证件列表
+        function getDocuments() {
+            $.ajax({
+                url: '/expiry-api/documents',
+                type: 'GET',
+                success: function(data) {
+                    // 清空列表
+                    $('#document-list').empty();
+
+                    // 按照有效期排序
+                    data.sort(function(a, b) {
+                        return new Date(a.expiry) - new Date(b.expiry);
+                    });
+
+                    // 添加证件到列表
+                    data.forEach(function(document) {
+                        var row = '<tr>' +
+                            '<td>' + document.name + '</td>' +
+                            '<td>' + document.expiry + '</td>' +
+                            '<td><button class="btn btn-danger" onclick="deleteDocument(' + document.id + ')">删除</button></td>' +
+                            '</tr>';
+                        $('#document-list').append(row);
+                    });
+                }
+            });
+        }
+
+        // 添加证件
+        $('#add-document-form').submit(function(event) {
+            event.preventDefault();
+
+            var name = $('#name').val();
+            var expiry = $('#expiry').val();
+
+            $.ajax({
+                url: '/expiry-api/documents',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ name: name, expiry: expiry }),
+                success: function(data) {
+                    // 清空表单
+                    $('#name').val('');
+                    $('#expiry').val('');
+
+                    // 添加证件到列表
+                    var row = '<tr>' +
+                        '<td>' + data.name + '</td>' +
+                        '<td>' + data.expiry + '</td>' +
+                        '<td><button class="btn btn-danger" onclick="deleteDocument(' + data.id + ')">删除</button></td>' +
+                        '</tr>';
+                    $('#document-list').prepend(row);
+                }
+            });
+        });
+
+        // 删除证件
+        function deleteDocument(id) {
+            if (confirm('确定要删除该证件吗？')) {
+                $.ajax({
+                    url: '/expiry-api/documents/' + id,
+                    type: 'DELETE',
+                    success: function(data) {
+                        // 从列表中移除被删除的证件
+                        $('#document-list tr').each(function() {
+                            if ($(this).find('button').attr('onclick').includes(id.toString())) {
+                                $(this).remove();
+                            }
+                        });
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
