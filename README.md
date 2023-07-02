@@ -20,3 +20,5 @@ http://nginxIP/expiry
 - Receive email alerts when the expiration date is approaching (under development).
 
 5. Project Screenshots
+   
+![demo]("https://github.com/h5m2424/Expiry_Management/blob/main/demo.png")
