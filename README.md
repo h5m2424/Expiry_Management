@@ -8,10 +8,10 @@ Help you manage the expiration time of various documents.
    - Modify the frontend and backend API server IP (`nginx/config/conf.d/default.conf`).
 
 2. Run the project using the following command:
-   
 ```bash
 docker-compose up -d
 ```
+
 3. Access the project at the following URL:   
 http://nginxIP/expiry
 
@@ -20,5 +20,4 @@ http://nginxIP/expiry
 - Receive email alerts when the expiration date is approaching (under development).
 
 5. Project Screenshots
-   
 ![demo](https://github.com/h5m2424/Expiry_Management/blob/main/demo.png)
