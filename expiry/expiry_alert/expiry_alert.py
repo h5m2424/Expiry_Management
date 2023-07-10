@@ -14,9 +14,6 @@ config.read('config/config.ini')
 log_path = config['logging']['log_path']
 logging.basicConfig(filename=log_path, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# 获取当前日期和时间
-current_datetime = datetime.datetime.now()
-
 # 连接数据库
 db_config = {
     'host': config['database']['host'],
@@ -42,7 +39,7 @@ def send_email(subject, body):
     recipients = config['email']['recipients'].split(',')
 
     msg = MIMEText(body)
-    msg['Subject'] = f"{subject} - {current_datetime.strftime('%Y-%m-%d %H:%M:%S')}"
+    msg['Subject'] = f"{subject} - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     msg['From'] = sender
     msg['To'] = ', '.join(recipients)
 
@@ -50,15 +47,17 @@ def send_email(subject, body):
         smtp.login(smtp_username, smtp_password)
         smtp.send_message(msg)
 
-# 记录上一次发送告警的时间和已发送告警列表
-last_alert_time = None
-sent_alerts = []
+# 初始化已发送的告警集合
+sent_alerts = set()
 
+# 发送告警
 while True:
-    # 获取当前日期和时间
     current_datetime = datetime.datetime.now()
 
-    # 发送告警
+    # 检查是否到达新的告警时间点，并清空已发送告警集合
+    if current_datetime.time() == datetime.datetime.strptime('00:00', '%H:%M').time():
+        sent_alerts = set()
+
     for certificate in certificates:
         name = certificate[0]
         expiry = certificate[1]
@@ -74,9 +73,8 @@ while True:
                         subject = f"证件 {name} 已过期！"
                         body = f"证件 {name} 已过期，请及时处理！"
                         send_email(subject, body)
-                        # 更新上一次发送告警的时间和已发送告警列表
-                        last_alert_time = current_datetime
-                        sent_alerts.append((alert_time, name))
+                        # 添加到已发送告警集合
+                        sent_alerts.add((alert_time, name))
                         logging.info(f"Sent expiration alert for certificate {name}")
 
         # 判断是否需要发送告警
@@ -92,17 +90,8 @@ while True:
                             subject = f"证件 {name} 即将过期！"
                             body = f"证件 {name} 即将在 {config['alert_days'][alert_day]} 天后过期，请注意！"
                             send_email(subject, body)
-                            # 更新上一次发送告警的时间和已发送告警列表
-                            last_alert_time = current_datetime
-                            sent_alerts.append((alert_time, name))
+                            # 添加到已发送告警集合
+                            sent_alerts.add((alert_time, name))
                             logging.info(f"Sent expiration alert for certificate {name}")
 
-    # 检查是否到达下一个告警时间点，并清空已发送告警列表
-    if last_alert_time is not None:
-        next_alert_time = last_alert_time + datetime.timedelta(hours=1)
-        if current_datetime >= next_alert_time:
-            sent_alerts = []
-            logging.info("Cleared sent alerts")
-
     time.sleep(10)
-
