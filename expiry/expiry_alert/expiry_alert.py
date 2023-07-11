@@ -1,6 +1,6 @@
 import configparser
-import pymysql
 import logging
+import pymysql
 import datetime
 import smtplib
 import time
@@ -15,6 +15,9 @@ log_path = config['logging']['log_path']
 logging.basicConfig(filename=log_path, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # 连接数据库
+logger = logging.getLogger(__name__)
+logger.info('连接数据库')
+
 db_config = {
     'host': config['database']['host'],
     'user': config['database']['user'],
@@ -26,11 +29,13 @@ cursor = connection.cursor()
 
 # 查询证件表
 query = "SELECT name, expiry FROM document"
+logger.info('执行数据库查询')
 cursor.execute(query)
 certificates = cursor.fetchall()
 
 # 发送邮件
 def send_email(subject, body):
+    logger.info('发送邮件')
     smtp_host = config['email']['smtp_host']
     smtp_port = config['email']['smtp_port']
     smtp_username = config['email']['smtp_username']
@@ -57,6 +62,7 @@ while True:
     # 检查是否到达新的告警时间点，并清空已发送告警集合
     if current_datetime.time() == datetime.datetime.strptime('00:00', '%H:%M').time():
         sent_alerts = set()
+        logger.info('初始化每日告警')
 
     for certificate in certificates:
         name = certificate[0]
@@ -75,7 +81,7 @@ while True:
                         send_email(subject, body)
                         # 添加到已发送告警集合
                         sent_alerts.add((alert_time, name))
-                        logging.info(f"Sent expiration alert for certificate {name}")
+                        logging.info(f"已发送证书过期警报：{name}")
 
         # 判断是否需要发送告警
         for alert_day in config['alert_days']:
@@ -92,6 +98,6 @@ while True:
                             send_email(subject, body)
                             # 添加到已发送告警集合
                             sent_alerts.add((alert_time, name))
-                            logging.info(f"Sent expiration alert for certificate {name}")
+                            logging.info(f"已发送证书过期警报：{name}")
 
     time.sleep(10)
