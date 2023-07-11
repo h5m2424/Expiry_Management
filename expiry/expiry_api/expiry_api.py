@@ -1,7 +1,7 @@
 import os
+import configparser
 import logging
 import pymysql
-import configparser
 from datetime import datetime
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
@@ -27,11 +27,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql://{db_user}:{db_password}@{db_ho
 # 设置日志记录
 log_level = config.get('Logging', 'level')
 log_path = config.get('Logging', 'path')
-logging.basicConfig(level=log_level, filename=log_path)
+logging.basicConfig(level=log_level, filename=log_path, format='%(asctime)s %(levelname)s %(message)s')
 logger = logging.getLogger(__name__)
 
 # 创建数据库
 def create_database():
+    logger.info('创建数据库')
     conn = pymysql.connect(host=db_host, user=db_user, password=db_password)
     cursor = conn.cursor()
     cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_database}")
@@ -40,6 +41,7 @@ def create_database():
 
 # 创建数据库表
 def create_tables():
+    logger.info('创建数据库表')
     with app.app_context():
         db.create_all()
 
@@ -96,11 +98,14 @@ def delete_document(id):
         return jsonify({"message": "证件不存在"})
 
 # 创建数据库
+logger.info('开始创建数据库')
 create_database()
+logger.info('数据库创建完成')
 
 # 创建数据库表
+logger.info('开始创建数据库表')
 create_tables()
+logger.info('数据库表创建完成')
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
-
