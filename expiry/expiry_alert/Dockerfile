@@ -11,4 +11,4 @@ COPY . /app
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 运行API
-CMD ["python", "expiry_alert.py"]
+ENTRYPOINT ["bash", "entrypoint.sh"]
