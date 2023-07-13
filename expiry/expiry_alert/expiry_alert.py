@@ -27,12 +27,6 @@ db_config = {
 connection = pymysql.connect(**db_config)
 cursor = connection.cursor()
 
-# 查询证件表
-query = "SELECT name, expiry FROM document"
-logger.info('执行数据库查询')
-cursor.execute(query)
-certificates = cursor.fetchall()
-
 # 发送邮件
 def send_email(subject, body):
     logger.info('发送邮件')
@@ -57,12 +51,20 @@ sent_alerts = set()
 
 # 发送告警
 while True:
-    current_datetime = datetime.datetime.now()
+    # 查询证件表
+    query = "SELECT name, expiry FROM document"
+    logger.info('执行数据库查询')
+    cursor.execute(query)
+    certificates = cursor.fetchall()
 
-    # 检查是否到达新的告警时间点，并清空已发送告警集合
-    if current_datetime.time() == datetime.datetime.strptime('00:00', '%H:%M').time():
+    current_datetime = datetime.datetime.now()
+    current_time = current_datetime.strftime('%H:%M')
+    target_time = '00:00'
+
+    # 检查是否到达新的一天，并清空已发送告警集合
+    if current_time == target_time:
         sent_alerts = set()
-        logger.info('初始化每日告警')
+        logger.info('初始化已发送的告警集合')
 
     for certificate in certificates:
         name = certificate[0]
@@ -72,7 +74,7 @@ while True:
         if expiry <= current_datetime.date():
             # 判断是否在告警时间范围内
             for alert_time in config['alert_times']:
-                if current_datetime.time() >= datetime.datetime.strptime(config['alert_times'][alert_time], '%H:%M').time():
+                if current_time == datetime.datetime.strptime(config['alert_times'][alert_time], '%H:%M').strftime('%H:%M'):
                     # 判断是否已经发送过告警
                     if (alert_time, name) not in sent_alerts:
                         # 发送告警邮件
@@ -89,7 +91,7 @@ while True:
             if alert_date == current_datetime.date():
                 # 判断是否在告警时间范围内
                 for alert_time in config['alert_times']:
-                    if current_datetime.time() >= datetime.datetime.strptime(config['alert_times'][alert_time], '%H:%M').time():
+                    if current_time == datetime.datetime.strptime(config['alert_times'][alert_time], '%H:%M').strftime('%H:%M'):
                         # 判断是否已经发送过告警
                         if (alert_time, name) not in sent_alerts:
                             # 发送告警邮件
@@ -100,4 +102,4 @@ while True:
                             sent_alerts.add((alert_time, name))
                             logging.info(f"已发送证书过期警报：{name}")
 
-    time.sleep(10)
+    time.sleep(20)
