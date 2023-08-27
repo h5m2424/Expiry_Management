@@ -54,6 +54,7 @@ while True:
     # 查询证件表
     query = "SELECT name, expiry FROM document"
     logger.info('执行数据库查询')
+    connection.commit() # 刷新事务
     cursor.execute(query)
     certificates = cursor.fetchall()
 
