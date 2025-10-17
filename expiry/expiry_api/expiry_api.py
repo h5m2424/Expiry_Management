@@ -85,6 +85,20 @@ def add_document():
     db.session.commit()
     return jsonify(new_document.as_dict())
 
+# 更新证件
+@app.route('/expiry-api/documents/<int:id>', methods=['PUT'])
+def update_document(id):
+    logger.info('更新证件')
+    document = Document.query.get(id)
+    if document:
+        data = request.get_json()
+        document.name = data['name']
+        document.expiry = datetime.strptime(data['expiry'], '%Y-%m-%d').date()
+        db.session.commit()
+        return jsonify(document.as_dict())
+    else:
+        return jsonify({"message": "证件不存在"}), 404
+
 # 删除证件
 @app.route('/expiry-api/documents/<int:id>', methods=['DELETE'])
 def delete_document(id):
@@ -95,7 +109,7 @@ def delete_document(id):
         db.session.commit()
         return jsonify({"message": "删除成功"})
     else:
-        return jsonify({"message": "证件不存在"})
+        return jsonify({"message": "证件不存在"}), 404
 
 # 创建数据库
 logger.info('开始创建数据库')

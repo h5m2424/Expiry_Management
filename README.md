@@ -15,7 +15,7 @@ docker-compose up -d
 http://nginxIP/expiry
 
 4. Project Features:
-- Manage (add, delete, and view) document names and expiration dates on the web page. The list is sorted in descending order based on the expiration date.
+- Manage (add, edit, delete, and view) document names and expiration dates on the web page. The list is sorted in descending order based on the expiration date.
 - Receive email alerts when the expiration date is approaching.(You can customize how many days ago to receive alerts and at what time of the day to receive alerts.)
 
 5. Project Screenshots

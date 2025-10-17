@@ -2,51 +2,129 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>证件管理系统</title>
-    <link rel="stylesheet" href="/expiry/assets/bootstrap.min.css">
+    <link rel="stylesheet" href="/expiry/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/expiry/assets/css/all.min.css">
+    <link rel="stylesheet" href="/expiry/assets/css/inter.css">
+    <link rel="stylesheet" href="/expiry/assets/css/custom.css">
+
 </head>
 <body>
-    <div class="container">
-        <h1>证件管理系统</h1>
-        <hr>
-        <div class="row">
-            <div class="col-md-6">
-                <h2>证件有效期列表</h2>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>证件名称</th>
-                            <th>有效期</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="document-list">
-                    </tbody>
-                </table>
+    <div class="container-fluid">
+        <div class="main-container">
+            <div class="header text-center mb-5">
+                <h1><i class="fas fa-id-card me-3"></i>证件管理系统</h1>
+                <p class="text-muted fs-5">智能管理您的重要证件有效期</p>
             </div>
-            <div class="col-md-6">
-                <h2>添加证件</h2>
-                <form id="add-document-form">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">证件名称</label>
-                        <input type="text" class="form-control" id="name" required>
+            
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="fas fa-list"></i> 证件有效期列表</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th><i class="fas fa-file-alt"></i> 证件名称</th>
+                                            <th><i class="fas fa-calendar"></i> 有效期</th>
+                                            <th><i class="fas fa-traffic-light"></i> 状态</th>
+                                            <th><i class="fas fa-cogs"></i> 操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="document-list">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="expiry" class="form-label">有效期</label>
-                        <input type="date" class="form-control" id="expiry" required>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="mb-0"><i class="fas fa-plus-circle"></i> 添加证件</h4>
+                        </div>
+                        <div class="card-body">
+                            <form id="add-document-form">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label"><i class="fas fa-tag"></i> 证件名称</label>
+                                    <input type="text" class="form-control" id="name" placeholder="请输入证件名称" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="expiry" class="form-label"><i class="fas fa-calendar-alt"></i> 有效期</label>
+                                    <input type="date" class="form-control" id="expiry" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-plus"></i> 添加证件
+                                </button>
+                            </form>
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-primary">添加</button>
-                </form>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="/expiry/assets/jquery-3.6.0.min.js"></script>
+    <!-- 编辑模态框 -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-edit"></i> 编辑证件</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-document-form">
+                        <input type="hidden" id="edit-id">
+                        <div class="mb-3">
+                            <label for="edit-name" class="form-label"><i class="fas fa-tag"></i> 证件名称</label>
+                            <input type="text" class="form-control" id="edit-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-expiry" class="form-label"><i class="fas fa-calendar-alt"></i> 有效期</label>
+                            <input type="date" class="form-control" id="edit-expiry" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> 取消
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="updateDocument()">
+                        <i class="fas fa-save"></i> 保存更改
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/expiry/assets/js/jquery-3.6.0.min.js"></script>
+    <script src="/expiry/assets/js/bootstrap.bundle.min.js"></script>
     <script>
         // 页面加载完成后获取最新证件列表
         $(document).ready(function() {
             getDocuments();
         });
+
+        // 获取证件状态
+        function getDocumentStatus(expiry) {
+            const today = new Date();
+            const expiryDate = new Date(expiry);
+            const diffTime = expiryDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays < 0) {
+                return { class: 'status-expired', text: '已过期', icon: 'fas fa-times-circle' };
+            } else if (diffDays <= 30) {
+                return { class: 'status-warning', text: `${diffDays}天后过期`, icon: 'fas fa-exclamation-triangle' };
+            } else {
+                return { class: 'status-valid', text: '有效', icon: 'fas fa-check-circle' };
+            }
+        }
 
         // 获取最新证件列表
         function getDocuments() {
@@ -57,6 +135,13 @@
                     // 清空列表
                     $('#document-list').empty();
 
+                    if (data.length === 0) {
+                        $('#document-list').append(
+                            '<tr><td colspan="4" class="text-center text-muted">暂无证件数据</td></tr>'
+                        );
+                        return;
+                    }
+
                     // 按照有效期排序
                     data.sort(function(a, b) {
                         return new Date(a.expiry) - new Date(b.expiry);
@@ -64,13 +149,29 @@
 
                     // 添加证件到列表
                     data.forEach(function(document) {
-                        var row = '<tr>' +
-                            '<td>' + document.name + '</td>' +
-                            '<td>' + document.expiry + '</td>' +
-                            '<td><button class="btn btn-danger" onclick="deleteDocument(' + document.id + ')">删除</button></td>' +
-                            '</tr>';
+                        const status = getDocumentStatus(document.expiry);
+                        var row = `<tr>
+                            <td><i class="fas fa-file-alt text-primary"></i> ${document.name}</td>
+                            <td>${document.expiry}</td>
+                            <td><span class="status-badge ${status.class}"><i class="${status.icon}"></i> ${status.text}</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-warning btn-sm" onclick="editDocument(${document.id}, '${document.name}', '${document.expiry}')" title="编辑">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="deleteDocument(${document.id})" title="删除">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>`;
                         $('#document-list').append(row);
                     });
+                },
+                error: function() {
+                    $('#document-list').append(
+                        '<tr><td colspan="4" class="text-center text-danger">加载数据失败</td></tr>'
+                    );
                 }
             });
         }
@@ -79,8 +180,13 @@
         $('#add-document-form').submit(function(event) {
             event.preventDefault();
 
-            var name = $('#name').val();
+            var name = $('#name').val().trim();
             var expiry = $('#expiry').val();
+
+            if (!name || !expiry) {
+                alert('请填写完整信息');
+                return;
+            }
 
             $.ajax({
                 url: '/expiry-api/documents',
@@ -91,34 +197,97 @@
                     // 清空表单
                     $('#name').val('');
                     $('#expiry').val('');
-
-                    // 添加证件到列表
-                    var row = '<tr>' +
-                        '<td>' + data.name + '</td>' +
-                        '<td>' + data.expiry + '</td>' +
-                        '<td><button class="btn btn-danger" onclick="deleteDocument(' + data.id + ')">删除</button></td>' +
-                        '</tr>';
-                    $('#document-list').prepend(row);
+                    
+                    // 重新加载列表
+                    getDocuments();
+                    
+                    // 显示成功消息
+                    showMessage('证件添加成功！', 'success');
+                },
+                error: function() {
+                    showMessage('添加失败，请重试', 'error');
                 }
             });
         });
 
+        // 编辑证件
+        function editDocument(id, name, expiry) {
+            $('#edit-id').val(id);
+            $('#edit-name').val(name);
+            $('#edit-expiry').val(expiry);
+            
+            var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+            editModal.show();
+        }
+
+        // 更新证件
+        function updateDocument() {
+            var id = $('#edit-id').val();
+            var name = $('#edit-name').val().trim();
+            var expiry = $('#edit-expiry').val();
+
+            if (!name || !expiry) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            $.ajax({
+                url: '/expiry-api/documents/' + id,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ name: name, expiry: expiry }),
+                success: function(data) {
+                    // 关闭模态框
+                    var editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+                    editModal.hide();
+                    
+                    // 重新加载列表
+                    getDocuments();
+                    
+                    // 显示成功消息
+                    showMessage('证件更新成功！', 'success');
+                },
+                error: function() {
+                    showMessage('更新失败，请重试', 'error');
+                }
+            });
+        }
+
         // 删除证件
         function deleteDocument(id) {
-            if (confirm('确定要删除该证件吗？')) {
+            if (confirm('确定要删除该证件吗？此操作不可恢复！')) {
                 $.ajax({
                     url: '/expiry-api/documents/' + id,
                     type: 'DELETE',
                     success: function(data) {
-                        // 从列表中移除被删除的证件
-                        $('#document-list tr').each(function() {
-                            if ($(this).find('button').attr('onclick').includes(id.toString())) {
-                                $(this).remove();
-                            }
-                        });
+                        // 重新加载列表
+                        getDocuments();
+                        
+                        // 显示成功消息
+                        showMessage('证件删除成功！', 'success');
+                    },
+                    error: function() {
+                        showMessage('删除失败，请重试', 'error');
                     }
                 });
             }
+        }
+
+        // 显示消息
+        function showMessage(message, type) {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const alertHtml = `<div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>`;
+            
+            // 在页面顶部显示消息
+            $('.main-container').prepend(alertHtml);
+            
+            // 3秒后自动消失
+            setTimeout(function() {
+                $('.alert').fadeOut();
+            }, 3000);
         }
     </script>
 </body>
